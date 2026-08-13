@@ -1,0 +1,43 @@
+# Run fetch-reviews.js daily at 6:00 UTC (7:00 CET / 8:00 CEST)
+# Saves reviews/reviews-cs.json and reviews/reviews-de.json
+# URLs: https://cdn.jsdelivr.net/gh/USER/REPO/reviews/reviews-cs.json
+name: Fetch Google Reviews
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # 6:00 UTC every day
+  workflow_dispatch:       # Allow manual run: Actions → Fetch Google Reviews → Run workflow
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # Required to push reviews
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Fetch reviews (CS + DE)
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          GOOGLE_PLACE_ID: ${{ secrets.GOOGLE_PLACE_ID }}
+        run: node fetch-reviews.js
+
+      - name: Update reviews without creating new commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reviews-cs.json reviews-de.json
+          if git diff --cached --quiet; then
+            echo "No changes in reviews"
+            exit 0
+          fi
+          git commit --amend --no-edit
+          git push --force-with-lease origin main
