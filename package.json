@@ -1,0 +1,9 @@
+{
+  "name": "fetch-reviews",
+  "version": "1.0.0",
+  "description": "Fetch Google Reviews and place photos (API only)",
+  "scripts": {
+    "fetch": "node fetch-reviews.js"
+  },
+  "dependencies": {}
+}
